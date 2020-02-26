@@ -144,7 +144,7 @@ class MainWindow(QMainWindow):
         
     def free_drawing(self):
         self.log_action("Shape mode: free drawing")
-        self.canvas.lasso()
+        self.canvas.drawLasso()
 
     def move(self):
         self.log_action("Mode: move")

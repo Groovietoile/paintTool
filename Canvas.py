@@ -21,8 +21,8 @@ class Canvas(QWidget):
         self.selection = None
         self.selectionLasso = [] # list of components selected
         self.current_selection = None # QPolygon
-        self.beginLasso = QPoint()
-        self.endLasso = QPoint()
+        self.listLasso = []
+        self.lasso = None
         
         self.shapeColor = None
         self.shapeBgColor = None
@@ -58,14 +58,38 @@ class Canvas(QWidget):
                 pen = QPen(Qt.red)
                 pen.setWidth(5)
                 qp.setPen(pen)
-                
+            
+            #affichage de la sélection lasso
+            if self.lassoMode and self.selectionLasso:
+                for j in self.selectionLasso:
+                    if i == j:
+                        pen = QPen(Qt.red)
+                        pen.setWidth(5)
+                        qp.setPen(pen)
+               
             if self.components[i][1] == "rectangle":
                 qp.drawRect(self.components[i][0])
             elif self.components[i][1] == "ellipse":
                 qp.drawEllipse(self.components[i][0])
-                
         
-                
+        #lasso en cours
+        if self.listLasso != [] and self.lasso == None:
+            pen = QPen(Qt.red)
+            pen.setWidth(5)
+            qp.setPen(pen)
+            for p in self.listLasso:
+                qp.drawPoint(p)
+        '''
+        #lasso fini
+        if self.lasso != None:
+            pen = QPen(Qt.red)
+            pen.setWidth(5)
+            #pen.setStyle(Qt.DashDotLine)
+            qp.setPen(pen)
+            qp.setBrush(QColor(0,0,0,0))
+            qp.drawPolygon(self.lasso)
+        '''
+        
         if self.drawMode:
             
             #affichage de l'élément en cours de construction
@@ -87,7 +111,7 @@ class Canvas(QWidget):
                     
             if self.current_selection != None:
                 qp.drawConvexPolygon(self.current_selection)
-
+                
         
     def mousePressEvent(self, event):
         if self.drawMode:
@@ -98,24 +122,24 @@ class Canvas(QWidget):
         if self.moveMode:
             self.translateBegin = event.pos()
             
-        if self.selectMode:
-            select = event.pos()-self.translatePoint
-            for i in range(len(self.components)):
-                if self.components[i][0].contains(select):
-                   self.selection = i
-                   break
-               
-        if self.selectionLasso:
-            select = event.pos()-self.translatePoint
-            for i in range(len(self.components)):
-                if self.components[i][0].contains(select):
-                   self.selectionLasso.append(i)
-                   
         if self.lassoMode:
-            self.beginLasso = event.pos()-self.translatePoint
-            self.endLasso = event.pos()-self.translatePoint
-            self.current_selection = QPolygon(QRect(self.beginLasso,self.endLasso))
-        
+            #reset lasso
+            self.lasso = None
+            self.listLasso = []
+            self.selectionLasso = []
+            
+            pt = event.pos()-self.translatePoint
+            self.listLasso.append(pt)
+            
+        if self.selectMode:
+            #reset selection
+            self.selection = None
+            select = event.pos()-self.translatePoint
+            for i in range(len(self.components)):
+                if self.components[i][0].contains(select):
+                    self.selection = i
+                    break
+               
         self.update()
         
     def mouseMoveEvent(self, event):
@@ -123,14 +147,14 @@ class Canvas(QWidget):
             self.end = event.pos()-self.translatePoint
             self.current_component = QRect(self.begin, self.end)
             
-        if self.moveMode: #à tester
+        if self.moveMode: 
             self.translateEnd = event.pos()
             self.translatePoint = self.translatePoint + (self.translateEnd - self.translateBegin)
-            self.translateBegin = event.pos()
+            self.translateBegin = event.pos()            
                    
         if self.lassoMode:
-            self.endLasso = event.pos()-self.translatePoint
-            self.current_selection = QRect(self.beginLasso, self.endLasso)
+            pt = event.pos()-self.translatePoint
+            self.listLasso.append(pt)
 
         self.update()
             
@@ -143,6 +167,13 @@ class Canvas(QWidget):
             self.translateEnd = event.pos()
             self.translatePoint = self.translatePoint + (self.translateEnd - self.translateBegin)
             
+        if self.lassoMode:
+            self.lasso = QPolygon(self.listLasso)
+            for i in range(len(self.components)):
+                pt = self.components[i][0].center()
+                if self.lasso.containsPoint(pt, 1):
+                    self.selectionLasso.append(i)
+        
         self.update()
 
     def rectangle(self):
@@ -152,10 +183,16 @@ class Canvas(QWidget):
             self.drawShape = False
             self.drawMode = False
             self.components[self.selection][1] = "rectangle"
+            
+        elif self.selectionLasso != []:
+            for c in self.selectionLasso:
+                self.components[c][1] = "rectangle"
         else:
             self.drawMode = True
             self.drawShape = True
             self.shape = "rectangle"
+            
+        self.update()
         
     def ellipse(self):
         self.moveMode = False
@@ -164,10 +201,15 @@ class Canvas(QWidget):
             self.drawShape = False
             self.drawMode = False
             self.components[self.selection][1] = "ellipse"
+        elif self.selectionLasso != []:
+            for c in self.selectionLasso:
+                self.components[c][1] = "ellipse"
         else:
             self.drawMode = True
             self.drawShape = True
             self.shape = "ellipse"
+            
+        self.update()
 
     #pen
     def set_color(self):
@@ -175,11 +217,13 @@ class Canvas(QWidget):
         color = QColorDialog.getColor()
         if self.selection:
             self.components[self.selection][2] = color
-        elif self.selectionLasso:
+        elif self.selectionLasso != []:
             for i in range(len(self.selectionLasso)):
                 self.components[i][2] = color
         else:
             self.shapeColor = color
+            
+        self.update()
     
     #brush    
     def set_bgcolor(self):
@@ -187,12 +231,13 @@ class Canvas(QWidget):
         color = QColorDialog.getColor()
         if self.selection:
             self.components[self.selection][3] = color
-        elif self.selectionLasso:
+        elif self.selectionLasso != []:
             for i in range(len(self.selectionLasso)):
                 self.components[i][3] = color
         else:
             self.shapeBgColor = color
-    
+        self.update()
+        
     def draw(self):
         print("draw")
         self.moveMode = False
@@ -211,8 +256,9 @@ class Canvas(QWidget):
         self.drawMode = False
         self.selectMode = True
         
-    def lasso(self):
+    def drawLasso(self):
         print("lasso")
         self.moveMode = False
         self.drawMode = False
+        self.selectMode = True
         self.lassoMode = True
