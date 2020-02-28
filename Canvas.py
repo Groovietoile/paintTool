@@ -242,6 +242,7 @@ class Canvas(QWidget):
         print("draw")
         self.moveMode = False
         self.selectMode = False
+        self.lassoMode = False
         self.drawMode = True
         
     def move(self):
@@ -249,6 +250,7 @@ class Canvas(QWidget):
         self.drawShape = False
         self.drawMode = False
         self.selectMode = False
+        self.lassoMode = False
         self.moveMode = True
         
     def select(self):
