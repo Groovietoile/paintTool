@@ -24,7 +24,7 @@ class Chart(QChart):
 		categories = ["Rectangles", "Ellipses"]
 		axis = QBarCategoryAxis()
 		axis.append(categories)
-		axis.setTitleText("Percentage of shapes")
+		axis.setTitleText("Number of shapes")
 		self.setAxisX(axis, series)
 
 		self.setAnimationOptions(QChart.SeriesAnimations)
@@ -44,7 +44,7 @@ class Chart(QChart):
 		categories = ["Rectangles", "Ellipses"]
 		axis = QBarCategoryAxis()
 		axis.append(categories)
-		axis.setTitleText("Percentage of shapes")
+		axis.setTitleText("Number of shapes")
 		self.setAxisX(axis, series)
 		self.setAnimationOptions(QChart.SeriesAnimations)
 		self.view.repaint()
