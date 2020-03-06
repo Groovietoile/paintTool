@@ -3,7 +3,9 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *   
 from PyQt5.QtCore import *
 from Canvas import *
+from Chart import *
 import resources
+
 
 class MainWindow(QMainWindow):
 
@@ -12,21 +14,34 @@ class MainWindow(QMainWindow):
         self.statusBar()
         self.setWindowTitle("Paint")
         
-        self.canvas = Canvas(self)
-        self.textEdit = QTextEdit(self)
+        #self.canvas = Canvas(self)
+        #self.textEdit = QTextEdit(self)
+        self.chart = Chart()
+        self.view = QChartView(self.chart)
+        self.chart.set_view(self.view)
+        #self.statusBar()
         
+        self.canvas = Canvas(self.chart)
+        self.textEdit = QTextEdit(self)
+
+        mainLayout = QGridLayout(self)
+        mainLayout.addWidget(self.canvas, 1, 1)
+        mainLayout.addWidget(self.textEdit, 2, 1)
+        mainLayout.addWidget(self.view, 1, 2, 5, 1)
+        '''
         top_layout = QVBoxLayout()
         top_layout.addWidget(self.canvas)
         top_layout.addWidget(self.textEdit)
+        '''
         #top_layout.addLayout( h_layout );
         
         container = QWidget()
-        container.setLayout(top_layout)
+        container.setLayout(mainLayout)
         self.setCentralWidget(container)
         
 
         #self.setCentralWidget(self.canvas)
-        self.resize(600, 500)
+        self.resize(1000, 700)
 
         bar = self.menuBar()
         fileMenu = bar.addMenu("File")
@@ -60,8 +75,8 @@ class MainWindow(QMainWindow):
         self.addToolBar(fileToolBar)
         
         colorMenu = bar.addMenu("Color")
-        actPen = fileMenu.addAction(QIcon(":/icons/pen.png"), "&Pen color", self.pen_color, QKeySequence("Ctrl+P"))
-        actBrush = fileMenu.addAction(QIcon(":/icons/brush.png"), "&Brush color", self.brush_color, QKeySequence("Ctrl+B"))
+        actPen = colorMenu.addAction(QIcon(":/icons/pen.png"), "&Pen color", self.pen_color, QKeySequence("Ctrl+P"))
+        actBrush = colorMenu.addAction(QIcon(":/icons/brush.png"), "&Brush color", self.brush_color, QKeySequence("Ctrl+B"))
 
         colorToolBar = QToolBar("Color")
         self.addToolBar( colorToolBar )
@@ -69,26 +84,26 @@ class MainWindow(QMainWindow):
         colorToolBar.addAction( actBrush )
 
         shapeMenu = bar.addMenu("Shape")
-        actRectangle = fileMenu.addAction(QIcon(":/icons/rectangle.png"), "&Rectangle", self.rectangle )
-        actEllipse = fileMenu.addAction(QIcon(":/icons/ellipse.png"), "&Ellipse", self.ellipse)
-        actFree = fileMenu.addAction(QIcon(":/icons/free.png"), "&Free drawing", self.free_drawing)
+        actRectangle = shapeMenu.addAction(QIcon(":/icons/rectangle.png"), "&Rectangle", self.rectangle )
+        actEllipse = shapeMenu.addAction(QIcon(":/icons/ellipse.png"), "&Ellipse", self.ellipse)
 
         shapeToolBar = QToolBar("Shape")
         self.addToolBar( shapeToolBar )
         shapeToolBar.addAction( actRectangle )
         shapeToolBar.addAction( actEllipse )
-        shapeToolBar.addAction( actFree )
 
         modeMenu = bar.addMenu("Mode")
         actMove = modeMenu.addAction(QIcon(":/icons/move.png"), "&Move", self.move)
         actDraw = modeMenu.addAction(QIcon(":/icons/draw.png"), "&Draw", self.draw)
         actSelect = modeMenu.addAction(QIcon(":/icons/select.png"), "&Select", self.select)
+        actFree = modeMenu.addAction(QIcon(":/icons/free.png"), "&Free drawing", self.free_drawing)
 
         modeToolBar = QToolBar("Navigation")
         self.addToolBar( modeToolBar )
         modeToolBar.addAction( actMove )
         modeToolBar.addAction( actDraw )
         modeToolBar.addAction( actSelect )
+        modeToolBar.addAction( actFree )
 
         '''
         copy = QAction(QIcon("copy.png"), "Copy", self)
@@ -221,7 +236,7 @@ def main(args):
     ui = MainWindow(args)
     ui.show()
     sys.exit(app.exec_()) # question 1
-	
+
 
 if __name__ == "__main__":
-	main(sys.argv) 
+    main(sys.argv)
